@@ -1,7 +1,6 @@
 
 Program StructureHeated
-	! this program is written by Anil Aksu to solve 2D transient Non-linear Scrödinger Equation in polar coordinates
-	!
+	! this program is written to solve 2D transient heat transfer problem by Anil A. Aksu
 	
 	integer i,j,k,jstart,jend
 	! the start and the end point of the grid 
@@ -55,15 +54,15 @@ Program StructureHeated
 	real*8, allocatable::uu_x(:,:),vu_x(:,:),uv_x(:,:),vv_x(:,:)
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!                                                     !
-	!                 Plasma Parameters			          !
+	!              Elastisity Parameters			      !
 	!                                                     !
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	! linear and non-linear indices of refraction
-	real*8 n0,n2
-	! the  wavenumber and wavelength in z direction 
-	real*8 kz,lambdaz
-	! GVD parameter and the critical power of self-focusing
-	real*8 beta,Pcr
+	! lame constants and density
+	real*8 mu, lambda, rho
+	! the excitation wave length and the half width of the gaussian profile
+	real*8 lambdax, sigma 
+	! the diffusivity constant
+	real*8 xnu
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!                                                     !
 	!                Numerical Operators			      !
@@ -111,15 +110,27 @@ Program StructureHeated
 	pi=4.*datan(1.d0)
 	phi=CMPLX(0,2.*pi)
 	
-
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	!                                                     !
+	!               Elasticity Parameters                 !
+	!                                                     !
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	! lame parameters
+	mu=10 
+	lambda=20
+	! the excitation wave length in x direction
+	lambdax=0.875
+	! the half width of Gaussian profile
+	sigma=0.25*lambdax
+	! the diffusivity 
+	xnu=10E-1
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!                                                     !
 	!      2D Transient Elastodynamic Equation 		      !
 	!			Solution on GLL-GLL Grid     			  !
 	!                                                     !
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	! the wave number in z direction 
-	lambdaz=1.2
+	
 	! the number of subgrids
 	Nsub=5 
 	! domian properties: number of points in domain and length of domain
@@ -128,8 +139,8 @@ Program StructureHeated
 	! the number of time steps
 	Ntime = 60000
 	! the subdomain length in x direction and y direction
-	Lx=20.*lambdaz
-	Ly=10.*lambdaz
+	Lx=20.*lambdax
+	Ly=10.*lambdax
 	
 	! let's allocate the grid
 	allocate(x_2Dmother(Nx*Ny,2))
@@ -194,19 +205,17 @@ Program StructureHeated
 	
 	! let's generate 2D stiffness matrix 
 	call getStiffMatrix(StiffMatrix,Nx,Ny,Lx,Ly)
-	!call getDiffZMatrix(DiffX,Nx,Ny,Lx)
+	StiffMatrix=xnu*StiffMatrix
 	! let's generate the boundary conditions
 	call TwoDBC(BCMatrix2D,0,0,0,0,Nx,Ny)
 	! let's apply boundary conditions
 	call TwoDBCApplyFirst(BCMatrix2D,StiffMatrix,InvSysMatrix,Nx,Ny)
-	! let's generate state space matrix
-	!call getStateSpace2ndDiff(StateMatrix,LaplaceMatrix,Nx,Ny)
 	! let's generate the required mass matrix
-	!call getMassMatrixWave(InvMassMatrix,Nx,Ny)
+	call getMassMatrix(InvMassMatrix,Nx,Ny)
 	! the boundary conditions are also applied to mass matrix in this formulation but this time all of them has to zero
-	!call TwoDBC(BCMatrix2D,0,0,0,0,Nx,Ny)
+	call TwoDBC(BCMatrix2D,0,0,0,0,Nx,Ny)
 	! let's apply them 
-	!call TwoDBCApplyFirst(BCMatrix2D,InvMassMatrix,MassMatrix,Nx,Ny)
+	call TwoDBCApplyFirst(BCMatrix2D,InvMassMatrix,MassMatrix,Nx,Ny)
 	
 	
 	! the time integration Crank-Nicholson method is employed to get more stable and accurate 
@@ -215,7 +224,7 @@ Program StructureHeated
 	! requires matrix inversion
 	
 	! theta integration parameter
-	!theta=0.5
+	theta=0.5
 	
 	! the step size
 	dt=0.001
@@ -238,24 +247,20 @@ Program StructureHeated
 		call integrateConvective(u_x(:,(i-1)),up_x(:,(i-1)),f_time,Nx,Ny,dt,time_s(i),time_tot)
 		! the calculation of RHS of time integration, therefore the external forcing of time integration 
 		call matvect(RhsMatrix,f_time,u_x(:,(i-1)),Nx*Ny)
-		call matvect(RhsMatrix,u_x(:,(i-1)),f_time,Nx*Ny)
 		! the calculation of implicit part of integration 
 		call matvect(InvSysMatrix,u_x(:,(i-1)),u_x(:,i),Nx*Ny)	
-		call matvect(InvSysMatrix,f_time,u_x(:,i),Nx*Ny)	
 	end do
 	
-	open(139,file='BCMatrix.dat',status='unknown')
-	open(140,file='StiffMatrix.dat',status='unknown')
+	!open(139,file='BCMatrix.dat',status='unknown')
+	!open(140,file='StiffMatrix.dat',status='unknown')
 	open(141,file='2DNumerical.dat',status='unknown')
 	
 	do i=1,Nx*Ny
-	!	write(140,*) StiffMatrix(i,:)
+	!	write(140,*) BCMatrix2D(i,:)
 	!	write(139,*) BCMatrix2D(i,:)
-	 	write(140,*) SysMatrix(i,:)
+	! 	write(140,*) SysMatrix(i,:)
 		write(141,*) x_2Dreal(i,:)/lambdax,u_x(i,Ntime)
 	end do
 		
 		
-	
-			
 End Program StructureHeated

@@ -1,6 +1,6 @@
-!!! this file contains all numerical differentiation routines created by Anil A. Aksu
+!!! this file contains all numerical differentiation routines 
 !!! including laplacian and gradient operators in 2-D and 3-D
-!!! Jacobian Matrices are also created here
+!!! Jacobiam Matrices are also created here
 subroutine FirstDiff(D1,N)
 	!! This function returns differentian matrix in 1D on mother interval -1 to 1
 	integer i,j,k 

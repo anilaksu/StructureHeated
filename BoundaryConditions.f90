@@ -347,36 +347,36 @@ subroutine TwoDBCApplyFirst(BCMatrix,GEMatrix,SysMatrix,Nx,Ny)
 	
 end subroutine TwoDBCApplyFirst
 
-!subroutine TwoDBCApplyConvective(u_bc,u_a,LB,RB,TB,BB,Nx,Ny)
+subroutine TwoDBCApplyConvective(u_bc,u_a,LB,RB,TB,BB,Nx,Ny)
 	!! This function applies boundary condition for first order partial differential equation 
-!	integer i,j
+	integer i,j
 	! the number of subintervals and the number of grid points 
-!	integer, intent(in):: Nx,Ny
+	integer, intent(in):: Nx,Ny
 	!boundary condition applied and auxialary fields
-!	real*8, intent(inout),dimension(Nx*Ny,Nx*Ny):: u_bc,u_a
+	real*8, intent(inout),dimension(Nx*Ny):: u_bc,u_a
 	!top and bottom boundary conditions
-!	real*8, intent(inout),dimension(Nx):: TB,BB
+	real*8, intent(inout),dimension(Nx):: TB,BB
 	! left and rigth boundary conditions
-!	real*8, intent(inout),dimension(Ny):: LB,RB
+	real*8, intent(inout),dimension(Ny):: LB,RB
 	
 	
 		! it is set to zero at boundaries
-!	do i=1,Ny
-!		do j=1,Nx
-!			if(j==Nx )then
-!				u_bc((i-1)*Nx+j)=RB(i)
-!			else if (j==1) then
-!					u_bc((i-1)*Nx+j)=LB(i)
-!				 else if(i==1 )then
-!						u_bc((i-1)*Nx+j)=BB(j)
-!			else if (i==Ny) then
-!					u_bc((i-1)*Nx+j)=TB(j)
-!				 else
-!					u_bc((i-1)*Nx+j)=u_a((i-1)*Nx+j)
-!			end if		
-!		end do
-!	end do
+	do i=1,Ny
+		do j=1,Nx
+			if(j==Nx )then
+				u_bc((i-1)*Nx+j)=RB(i)
+			else if (j==1) then
+					u_bc((i-1)*Nx+j)=LB(i)
+				 else if(i==1 )then
+						u_bc((i-1)*Nx+j)=BB(j)
+			else if (i==Ny) then
+					u_bc((i-1)*Nx+j)=TB(j)
+				 else
+					u_bc((i-1)*Nx+j)=u_a((i-1)*Nx+j)
+			end if		
+		end do
+	end do
 
 
 	
-!end subroutine TwoDBCApplyConvective
+end subroutine TwoDBCApplyConvective
