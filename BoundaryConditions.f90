@@ -329,7 +329,7 @@ subroutine TwoDBCApplyFirst(BCMatrix,GEMatrix,SysMatrix,Nx,Ny)
 	real*8, intent(inout),dimension(Nx*Ny,Nx*Ny):: BCMatrix,GEMatrix,SysMatrix
 	
 	! the start and end points of the right boundary 
-	SysMatrix=0.
+	SysMatrix=GEMatrix
 	
 
 	! the boundary conditions added

@@ -61,8 +61,8 @@ Program StructureHeated
 	real*8 mu, lambda, rho
 	! the excitation wave length and the half width of the gaussian profile
 	real*8 lambdax, sigma 
-	! the diffusivity constant
-	real*8 xnu
+	! the heat diffusion coeffient
+	real*8 kappa
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!                                                     !
 	!                Numerical Operators			      !
@@ -122,12 +122,13 @@ Program StructureHeated
 	lambdax=0.875
 	! the half width of Gaussian profile
 	sigma=0.25*lambdax
-	! the diffusivity 
-	xnu=10E-1
+	! the heat diffusion coefficient
+	kappa=10E-3
+	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!                                                     !
-	!      2D Transient Elastodynamic Equation 		      !
-	!			Solution on GLL-GLL Grid     			  !
+	!           2D Transient Heat Equation 	  	          !
+	!			   on GLL-GLL Grid     		        	  !
 	!                                                     !
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
@@ -137,9 +138,9 @@ Program StructureHeated
 	Nx=20
 	Ny=20
 	! the number of time steps
-	Ntime = 60000
+	Ntime = 3000
 	! the subdomain length in x direction and y direction
-	Lx=20.*lambdax
+	Lx=10.*lambdax
 	Ly=10.*lambdax
 	
 	! let's allocate the grid
@@ -188,13 +189,14 @@ Program StructureHeated
 	allocate(uv_x(Nx*Ny,Ntime))
 	allocate(f_time(Nx*Ny))
 	allocate(time_s(Ntime))
+	
 	time_s=0.
 	! it is set to zero at boundaries
 	do i=1,Ny
 		do j=1,Nx
 			if(j==1) then
 				!F((i-1)*Nx+j)=dsin(2.*pi*x_2Dreal((i-1)*Nx+j,2)/lambdax)
-				u_x((i-1)*Nx+j,1)=0.04*dexp(-0.5*(2.*x_2Dmother((i-1)*Nx+j,2)/Ly)**2./(sigma**2.))
+				u_x((i-1)*Nx+j,1)=0.4*dexp(-0.5*(0.5*x_2Dmother((i-1)*Nx+j,2)*Ly)**2./(sigma**2.))
 				!dexp(.5*(x_2Dreal((i-1)*Nx+1,2))**2./(sigma**2.))
 			else 
 				u_x((i-1)*Nx+j,1)=0.
@@ -205,7 +207,7 @@ Program StructureHeated
 	
 	! let's generate 2D stiffness matrix 
 	call getStiffMatrix(StiffMatrix,Nx,Ny,Lx,Ly)
-	StiffMatrix=xnu*StiffMatrix
+	StiffMatrix=kappa*StiffMatrix
 	! let's generate the boundary conditions
 	call TwoDBC(BCMatrix2D,0,0,0,0,Nx,Ny)
 	! let's apply boundary conditions
@@ -224,10 +226,10 @@ Program StructureHeated
 	! requires matrix inversion
 	
 	! theta integration parameter
-	theta=0.5
+	theta=0.
 	
 	! the step size
-	dt=0.001
+	dt=0.01
 
 	! the RHS term integration matrix
 	call getRHSMatrix(MassMatrix,InvSysMatrix,RhsMatrix,Nx,Ny,theta,dt)
@@ -251,14 +253,14 @@ Program StructureHeated
 		call matvect(InvSysMatrix,u_x(:,(i-1)),u_x(:,i),Nx*Ny)	
 	end do
 	
-	!open(139,file='BCMatrix.dat',status='unknown')
-	!open(140,file='StiffMatrix.dat',status='unknown')
+	open(139,file='BCMatrix.dat',status='unknown')
+	open(140,file='StiffMatrix.dat',status='unknown')
 	open(141,file='2DNumerical.dat',status='unknown')
 	
 	do i=1,Nx*Ny
 	!	write(140,*) BCMatrix2D(i,:)
-	!	write(139,*) BCMatrix2D(i,:)
-	! 	write(140,*) SysMatrix(i,:)
+		write(139,*) BCMatrix2D(i,:)
+		write(140,*) InvSysMatrix(i,:)
 		write(141,*) x_2Dreal(i,:)/lambdax,u_x(i,Ntime)
 	end do
 		
