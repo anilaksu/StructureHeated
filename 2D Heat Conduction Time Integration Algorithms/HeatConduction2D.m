@@ -71,8 +71,8 @@ ylabel('y')
 xlabel('x')
 % pbaspect([1 1 0.2])
 
-% Boundary Temperatures added to Temperature distribution found by Crank
-% Nicholson
+% Boundary Temperatures added to Temperature distribution found by
+% Alternating Direction Implicit Method (ADI)
 [ Temp ] = addTempBoundaries( Temp_ADI(:,N_time), Nx, Ny, Tx, Ty, Qx, Qy, dx, dy  );
 
 TempADI_final = reshape(Temp,[7, 4]);
